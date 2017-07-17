@@ -1,3 +1,9 @@
+//
+// ==========================================
+// Vector math for toroidal world
+// ==========================================
+//
+
 package godep
 
 type Direction int
