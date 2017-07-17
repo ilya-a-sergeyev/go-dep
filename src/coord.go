@@ -93,3 +93,92 @@ func (p *Coord) Dec(dir Direction) {
 	case Right: p.y--
 	}
 }
+
+func (p *Coord) Add(vx, vy int) Coord {
+
+	newcoord := Coord { x:(p.x+vx)%TheWorld.Size, y:p.y }
+
+	if p.x+vx >= TheWorld.Size {
+		newcoord.y = (p.y+vx/TheWorld.Size+1)%TheWorld.Size
+	} else if p.x+vx<0 {
+		newcoord.y = (p.y-vx/TheWorld.Size-1)%TheWorld.Size
+		newcoord.x += TheWorld.Size
+	}
+
+	ty := newcoord.y;
+	newcoord.y = (ty+vy)%TheWorld.Size
+
+	if p.y+vy >= TheWorld.Size {
+		newcoord.x = (newcoord.x+vy/TheWorld.Size+1)%TheWorld.Size
+	} else if p.y+vy<0 {
+		newcoord.x = (newcoord.x-vy/TheWorld.Size-1)%TheWorld.Size
+		newcoord.y += TheWorld.Size
+	}
+
+	return newcoord;
+}
+
+func (p *Coord) AddRaw(vx, vy int) Coord {
+	newcoord := Coord { x:(p.x+vx)%TheWorld.Size, y:(p.y+vy)%TheWorld.Size }
+	return newcoord
+}
+
+func sqrtNewton(l int) int {
+	var temp, div int
+
+	if l<=0 {
+		return 0
+	} 
+
+	rslt := l
+
+	if l&0xFFFF0000 != 0 {
+		if l&0xFF000000 != 0 {
+			div = 0x3FFF
+		} else {
+			div = 0x3FF
+		}
+	} else {
+		if  l&0x0FF00 != 0 {
+			div = 0x3F
+		} else {
+			if l>4 {
+				div = 0x7
+			} else {
+				div = l
+			}
+		}
+	}
+
+	for true {
+		temp = l / div + div
+		div =  temp >>  1
+		div += temp & 1
+		if rslt>div {
+			rslt = div
+		} else {
+			if l/rslt == rslt-1 && l%rslt == 0 {
+			rslt--
+			}
+			return rslt
+		}
+	}
+
+	return rslt
+}
+
+func (p *Coord) Length() int {
+	if p.y == 0 {
+		if p.x>0 {
+			return p.x
+		}
+		return -p.x
+	}
+	if p.x == 0 {
+		if p.y>0 {
+			return p.y
+		}
+		return -p.y
+	}
+	return sqrtNewton(p.x*p.x+p.y*p.y)
+}
