@@ -45,6 +45,10 @@ func NewCoordStack() *CoordStack {
     return &CoordStack {sync.Mutex{}, make([]Coord,0), }
 }
 
+func (s *CoordStack) Len() int {
+    return len(s.s)
+}
+
 func (s *CoordStack) Push(v Coord) {
     s.lock.Lock()
     defer s.lock.Unlock()
@@ -76,17 +80,19 @@ func NewCellStack() *CellStack {
     return &CellStack {sync.Mutex{}, make([]Cell,0), }
 }
 
+func (s *CellStack) Len() int {
+    return len(s.s)
+}
+
 func (s *CellStack) Push(v Cell) {
     s.lock.Lock()
     defer s.lock.Unlock()
-
     s.s = append(s.s, v)
 }
 
 func (s *CellStack) Pop() (Cell, error) {
     s.lock.Lock()
     defer s.lock.Unlock()
-
 
     l := len(s.s)
     if l == 0 {
@@ -101,7 +107,6 @@ func (s *CellStack) Pop() (Cell, error) {
 func (s *CellStack) IdxFromTop(idx int) (Cell, error) {
     s.lock.Lock()
     defer s.lock.Unlock()
-
 
     l := len(s.s)
     if l == 0 {

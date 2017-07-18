@@ -21,3 +21,11 @@ type Model []ModelCell
 func (world *World)GetCell(idx int) *Cell {
     return &world.soup[idx]
 }
+
+func (world *World)cellIdx(x, y int) int {
+    return x%world.size+(y%world.size)*world.size;
+}
+
+func (world *World)GetCellByCoord(c Coord) *Cell {
+    return &world.soup[world.cellIdx(c.x, c.y)]
+}
