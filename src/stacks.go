@@ -97,3 +97,23 @@ func (s *CellStack) Pop() (Cell, error) {
     s.s = s.s[:l-1]
     return res, nil
 }
+
+func (s *CellStack) IdxFromTop(idx int) (Cell, error) {
+    s.lock.Lock()
+    defer s.lock.Unlock()
+
+
+    l := len(s.s)
+    if l == 0 {
+        return Cell{}, errors.New("Empty CellStack")
+    }
+
+    if l-1 < idx {
+        return Cell{}, errors.New("Bad Idx CellStack")
+    }
+
+    res := s.s[l-1-idx]
+
+    return res, nil
+}
+
