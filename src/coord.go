@@ -24,28 +24,28 @@ func (p *Coord) Next(dir Direction) Coord {
 	newcoord := Coord { x:p.x, y:p.y }
 	switch dir {
 		case Forward:
-			newcoord.x = (newcoord.x+1) % TheWorld.size
+			newcoord.x = (newcoord.x+1) % GetWorld().size
 			// next row
 			if newcoord.x == 0 {
-				newcoord.y = (newcoord.y+1)%TheWorld.size
+				newcoord.y = (newcoord.y+1)%GetWorld().size
 			}
 		case Right:
-			newcoord.y = (newcoord.y+1) % TheWorld.size
+			newcoord.y = (newcoord.y+1) % GetWorld().size
 			// next column
 			if newcoord.y == 0 {
-				newcoord.x = (newcoord.x+1)%TheWorld.size
+				newcoord.x = (newcoord.x+1)%GetWorld().size
 			}
 		case Back:
 			if (p.x > 0) {
 				newcoord.x = p.x-1
 			} else {
-				newcoord.x = TheWorld.size-1
+				newcoord.x = GetWorld().size-1
 			}
 		case Left:
 			if (p.y > 0) {
 				newcoord.y = p.y-1
 			} else {
-				newcoord.y = TheWorld.size-1
+				newcoord.y = GetWorld().size-1
 			}
 	}
 	return newcoord
@@ -55,28 +55,28 @@ func (p *Coord) Prev(dir Direction) Coord {
 	newcoord := Coord { x:p.x, y:p.y }
 	switch dir {
 		case Back:
-			newcoord.x = (newcoord.x+1) % TheWorld.size
+			newcoord.x = (newcoord.x+1) % GetWorld().size
 			// next row
 			if newcoord.x == 0 {
-				newcoord.y = (newcoord.y+1)%TheWorld.size
+				newcoord.y = (newcoord.y+1)%GetWorld().size
 			}
 		case Left:
-			newcoord.y = (newcoord.y+1) % TheWorld.size
+			newcoord.y = (newcoord.y+1) % GetWorld().size
 			// next column
 			if newcoord.y == 0 {
-				newcoord.x = (newcoord.x+1)%TheWorld.size
+				newcoord.x = (newcoord.x+1)%GetWorld().size
 			}
 		case Forward:
 			if p.x > 0 {
 				newcoord.x = p.x-1
 			} else {
-				newcoord.x = TheWorld.size-1
+				newcoord.x = GetWorld().size-1
 			}
 		case Right:
 			if p.y > 0 {
 				newcoord.y = p.y-1
 			} else {
-				newcoord.y = TheWorld.size-1
+				newcoord.y = GetWorld().size-1
 			}
 	}
 	return newcoord
@@ -102,30 +102,30 @@ func (p *Coord) Dec(dir Direction) {
 
 func (p *Coord) Add(vx, vy int) Coord {
 
-	newcoord := Coord { x:(p.x+vx)%TheWorld.size, y:p.y }
+	newcoord := Coord { x:(p.x+vx)%GetWorld().size, y:p.y }
 
-	if p.x+vx >= TheWorld.size {
-		newcoord.y = (p.y+vx/TheWorld.size+1)%TheWorld.size
+	if p.x+vx >= GetWorld().size {
+		newcoord.y = (p.y+vx/GetWorld().size+1)%GetWorld().size
 	} else if p.x+vx<0 {
-		newcoord.y = (p.y-vx/TheWorld.size-1)%TheWorld.size
-		newcoord.x += TheWorld.size
+		newcoord.y = (p.y-vx/GetWorld().size-1)%GetWorld().size
+		newcoord.x += GetWorld().size
 	}
 
 	ty := newcoord.y;
-	newcoord.y = (ty+vy)%TheWorld.size
+	newcoord.y = (ty+vy)%GetWorld().size
 
-	if p.y+vy >= TheWorld.size {
-		newcoord.x = (newcoord.x+vy/TheWorld.size+1)%TheWorld.size
+	if p.y+vy >= GetWorld().size {
+		newcoord.x = (newcoord.x+vy/GetWorld().size+1)%GetWorld().size
 	} else if p.y+vy<0 {
-		newcoord.x = (newcoord.x-vy/TheWorld.size-1)%TheWorld.size
-		newcoord.y += TheWorld.size
+		newcoord.x = (newcoord.x-vy/GetWorld().size-1)%GetWorld().size
+		newcoord.y += GetWorld().size
 	}
 
 	return newcoord;
 }
 
 func (p *Coord) AddRaw(vx, vy int) Coord {
-	newcoord := Coord { x:(p.x+vx)%TheWorld.size, y:(p.y+vy)%TheWorld.size }
+	newcoord := Coord { x:(p.x+vx)%GetWorld().size, y:(p.y+vy)%GetWorld().size }
 	return newcoord
 }
 

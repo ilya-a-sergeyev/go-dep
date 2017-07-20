@@ -57,7 +57,7 @@ func (crt *Creature) Destroy() {
     //    "<<CRT " << Id << " is died (length "<< fingerprint.size() << "). His life was " << lifetime << " instructions long. >>" << log4cpp::eol;
 
     for i := range crt.fingerprint {
-        cell := TheWorld.GetCellByCoord(crt.fingerprint[i])
+        cell := GetWorld().GetCellByCoord(crt.fingerprint[i])
         //Log::Inf << "<<!!! CRT " << Id << " " << step%World::worldSize << ":"<< step/World::worldSize << ">>" << log4cpp::eol;
         cell.Clear()
     }
@@ -70,7 +70,7 @@ func (crt *Creature)DoAbort() {
     if len(crt.embrion)>0 {
         //Log::Inf << " CRT " << Id << " has " << embrion.size() << " embrional cells." << log4cpp::eol;
         for i := range crt.embrion {
-            cell := TheWorld.GetCellByCoord(crt.embrion[i])
+            cell := GetWorld().GetCellByCoord(crt.embrion[i])
             if cell.tailId == crt.Id {
                     //Log::Inf <<
                     //    "<<!!! CRT " << Id << " " << step%World::worldSize << ":"<< step/World::worldSize << ">>" << log4cpp::eol;
@@ -98,15 +98,15 @@ func (crt *Creature)JumpToBegin() bool {
 
 func (crt *Creature)jumpToEnd() bool {
     //Log::Inf << log4cpp::eol;
-    ins := TheWorld.GetCellByCoord(crt.ptr).instruction
-    dir := TheWorld.GetCellByCoord(crt.ptr).dir
+    ins := GetWorld().GetCellByCoord(crt.ptr).instruction
+    dir := GetWorld().GetCellByCoord(crt.ptr).dir
 
     for !(ins.code == Op_End) && !(ins.code == Op_None) {
         //Log::Inf << "CRT " << Id << " [" << ptr.x << ":" << ptr.y << "] " << static_cast<int>(dir);
         //Log::Inf << log4cpp::eol;
         crt.ptr = crt.ptr.Next(dir)
-        ins = TheWorld.GetCellByCoord(crt.ptr).instruction
-        dir = TheWorld.GetCellByCoord(crt.ptr).dir
+        ins = GetWorld().GetCellByCoord(crt.ptr).instruction
+        dir = GetWorld().GetCellByCoord(crt.ptr).dir
     }
 
     if crt.points.Len()>0 {
@@ -120,7 +120,7 @@ func (crt *Creature)moveBy(steps int) {
     if steps<0 {
         cnt := -steps;
         for cnt>0 {
-            tcell := TheWorld.GetCellByCoord(crt.ptr)
+            tcell := GetWorld().GetCellByCoord(crt.ptr)
             crt.ptr.Dec(tcell.dir)
             cnt--
         }
@@ -129,7 +129,7 @@ func (crt *Creature)moveBy(steps int) {
     if steps>0 {
         cnt := steps;
         for cnt>0 {
-            tcell := TheWorld.GetCellByCoord(crt.ptr)
+            tcell := GetWorld().GetCellByCoord(crt.ptr)
             crt.ptr.Inc(tcell.dir)
             cnt--
         }
@@ -152,3 +152,106 @@ func (crt *Creature)setFlags(value int) {
     }
 }
 
+//
+// Place of mutations
+//
+func (crt *Creature)ApplyPop(targetCoord *Coord, target *Cell, value *Instruction, src_dir Direction) {
+
+    tgt_dir := src_dir
+
+    //  mutation: deletion
+    for {
+
+        if GetMutator().chanceToBeRemoved() || crt.m_flag {
+            break
+        }
+
+        // remove only Nop's
+        if value.code != Op_Nop {
+            break
+        }
+
+        // корректируем указатель на цель, чтобы дальнейшее копирование выполнялось корректно
+        cell := GetWorld().GetCellByCoord(crt.ptr)
+        vect := &crt.internal_memory[cell.instruction.arg1.x]
+        *vect = vect.Prev(src_dir)
+        crt.m_flag = true
+
+        //to := crt.ptr.Add(vect.x, vect.y)
+        //Log::Not << "CRT " << Id << " <<Op deleted in [" << to.x << ":" << to.y << "]" << log4cpp::eol;
+        return
+    }
+
+    // mutation: direction shift
+    for {
+        if GetMutator().chanceToBeRedirected() || crt.m_flag {
+            break
+        }
+
+        switch src_dir {
+        case Forward:tgt_dir = Right
+        case Right:tgt_dir = Back
+        case Back:tgt_dir = Left
+        case Left:tgt_dir = Forward
+        }
+        //Log::Not << "CRT " << Id << " Direction of [" << targetCoord.x << ":" << targetCoord.y
+        //         << "] changed from " << static_cast<int>(src_dir) << " to "
+        //         << static_cast<int>(tgt_dir) << log4cpp::eol;
+        crt.m_flag = true
+	break
+    }
+
+    // mutation: constant correction
+    for {
+        break
+
+        if GetMutator().chanceToConstantChanged() || crt.m_flag {
+            break
+        }
+
+        opt := value.Options()
+
+        if opt.sourceOpType != Ot_ConstantVector {
+            break
+        }
+
+        GetMutator().MutateVector(&value.arg2)
+        crt.m_flag = true
+	break
+    }
+
+    // instruction copying
+    target.instruction = *value
+    target.tailId = crt.Id
+    target.executorId = 0
+    target.dir = tgt_dir
+    crt.embrion = append(crt.embrion, *targetCoord)
+
+    //  mutation: insert instruction
+    for {
+        if GetMutator().chanceToNopInserted() || crt.m_flag {
+            break
+        }
+
+        // корректируем указатель на цель, чтобы дальнейшее копирование выполнялось корректно
+        cell := GetWorld().GetCellByCoord(crt.ptr)
+        vect := &crt.internal_memory[cell.instruction.arg1.x]
+        *vect = vect.Next(tgt_dir)
+
+        // вставляем еще одну инструкцию
+        to := targetCoord.Next(tgt_dir)
+        targetCell := GetWorld().GetCellByCoord(to)
+        targetCell.instruction.code = Op_Nop
+        targetCell.tailId = crt.Id
+        targetCell.executorId = 0
+        targetCell.dir = tgt_dir
+	crt.embrion = append(crt.embrion, to)
+
+        crt.m_flag = true
+
+        //Log::Not << "CRT " << Id << " <<Nop inserted into [" << to.x << ":" << to.y << "]>>" << log4cpp::eol;
+	break
+
+    }
+
+}
